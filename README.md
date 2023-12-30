@@ -1,6 +1,11 @@
-# Setup Project
+# Pandora Finance Assignment for Setting-up and Creating the Solver in Cow Protocol
 
-Clone this repository
+## Introduction
+In this assignment we are going to build the solver from scratch and connect it to the orderbook. We will be using the solver template provided by Cow Protocol. The solver template is a python based solver that can be used to build a solver for any asset pair. 
+
+## Setup Project
+
+## Clone this repository
 
 ```sh
 git clone git@github.com:cowprotocol/solver-template-py.git
@@ -15,6 +20,59 @@ git clone git@github.com:cowprotocol/solver-template-py.git
 python3.10 -m venv venv
 source ./venv/bin/activate
 pip install -r requirements.txt
+```
+
+
+# Writing the code for solver in Auction Instance
+This solve method in the BatchAuction class is responsible for solving the batch auction by executing matched orders.The method iterates through the list of orders and checks for potential matches between orders. If a match is found where both orders can be filled, the method proceeds to execute the transactions.The execution process involves swapping tokens between the matched orders. 
+<detail>
+
+```python
+
+    def solve(self) -> None:
+        """Solve Batch"""        
+        orders = self.orders
+        for i in range(len(orders) - 1):
+            for j in range(i + 1, len(orders)):
+                order_i,order_j = orders[i],orders[j]
+                if order_i.match_type[order_j] == OrderMatchType.BOTH_FILLED:
+                    order_i.execute(
+                        buy_amount_value=order_j.sell_amount,
+                        sell_amount_value=order_j.buy_amount 
+                    )
+                    order_j.execute(
+                        buy_amount_value=order_i.sell_amount,
+                        sell_amount_value=order_i.buy_amount
+                    )
+                    token_a = self.token_info(order_i.sell_token)
+                    token_b = self.token_info(order_i.buy_token)
+
+                    self.prices[token_a.token] = order_j.sell_amount
+                    self.prices[token_b.token] = order_i.sell_amount
+                    return
+
+```
+
+</detail>
+
+# Writing the code for server to execute the solver
+The asynchronous function "solve" handles the API POST /solve endpoint, logging the client's solve request. It extracts solver arguments from the request and metadata from the problem to create a SolverArgs instance. Using this, it creates a BatchAuction object and solves it. The function prints the batch auction name and solver parameters, then returns a sample output containing reference token, executed orders, prices, and empty amms as the response.
+
+
+```python 
+    # 1. Solve BatchAuction: update batch_auction with
+    batch.solve()
+
+
+    sample_output = {
+        "ref_token": batch.ref_token.value,
+        "orders": {order.order_id: order.as_dict() for order in batch.orders if order.is_executed()},
+        "prices": {str(key): decimal_to_str(value) for key, value in batch.prices.items()},
+        "amms": {},
+    }
+
+    return sample_output
+
 ```
 
 # Run Solver Server
@@ -43,6 +101,7 @@ curl -X POST "http://127.0.0.1:8000/solve" \
   -H  "Content-Type: application/json" \
   --data "@data/small_example.json"
 ```
+
 
 # Connect to the orderbook:
 

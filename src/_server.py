@@ -74,20 +74,21 @@ async def solve(problem: BatchAuctionModel, request: Request):  # type: ignore
     print("Parameters Supplied", solver_args)
 
     # 1. Solve BatchAuction: update batch_auction with
-    # batch.solve()
-
-    trivial_solution = {
-        "orders": {},
-        "foreign_liquidity_orders": [],
+    batch.solve()
+# This code receives a batch auction and solver parameters, solves the batch auction, 
+# and returns a dictionary containing the reference token, executed orders, prices, and empty AMMs. 
+    sample_output = {
+        "ref_token": batch.ref_token.value,
+        "orders": {order.order_id: order.as_dict() for order in batch.orders if order.is_executed()},
+        "prices": {str(key): decimal_to_str(value) for key, value in batch.prices.items()},
         "amms": {},
-        "prices": {},
-        "approvals": [],
-        "interaction_data": [],
-        "score": "0",
     }
 
-    print("\n\n*************\n\nReturning solution: " + str(trivial_solution))
-    return trivial_solution
+    return sample_output
+
+
+
+
 
 
 # ++++ Server setup: ++++

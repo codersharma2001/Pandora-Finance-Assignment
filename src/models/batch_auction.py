@@ -8,6 +8,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Optional
 
+
 from src.models.order import Order, OrdersSerializedType
 from src.models.token import (
     Token,
@@ -19,6 +20,7 @@ from src.models.token import (
 from src.models.types import NumericType
 from src.models.uniswap import Uniswap, UniswapsSerializedType
 from src.util.enums import Chain
+from src.models.order import OrderMatchType
 
 
 class BatchAuction:
@@ -153,8 +155,33 @@ class BatchAuction:
         return Decimal(10) ** (2 * 18 - self.token_info(self.ref_token).decimals)
 
     def solve(self) -> None:
-        """Solve Batch"""
+        """Solve Batch"""        
+        orders = self.orders
+        for i in range(len(orders) - 1):
+            for j in range(i + 1, len(orders)):
+                order_i,order_j = orders[i],orders[j]
+                if order_i.match_type[order_j] == OrderMatchType.BOTH_FILLED:
+                    order_i.execute(
+                        buy_amount_value=order_j.sell_amount,
+                        sell_amount_value=order_j.buy_amount 
+                    )
+                    order_j.execute(
+                        buy_amount_value=order_i.sell_amount,
+                        sell_amount_value=order_i.buy_amount
+                    )
+                    token_a = self.token_info(order_i.sell_token)
+                    token_b = self.token_info(order_i.buy_token)
 
+                    self.prices[token_a.token] = order_j.sell_amount
+                    self.prices[token_b.token] = order_i.sell_amount
+                    return
+                
+                """This solve method in the BatchAuction class is responsible for solving the batch auction by executing matched orders.
+                   The method iterates through the list of orders and checks for potential matches between orders. If a match is found where both orders can be filled, the method proceeds to execute the transactions.
+                   The execution process involves swapping tokens between the matched orders. """
+                
+    
+                
     #################################
     #  SOLUTION PROCESSING METHODS  #
     #################################
