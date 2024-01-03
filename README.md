@@ -1,4 +1,4 @@
-# Pandora Finance Assignment for Setting-up and Creating the Solver in Cow Protocol
+# Velvet Assignment for Setting-up and Creating the Solver in Cow Protocol
 
 ## Introduction
 In this assignment we are going to build the solver from scratch and connect it to the orderbook. We will be using the solver template provided by Cow Protocol. The solver template is a python based solver that can be used to build a solver for any asset pair. 
